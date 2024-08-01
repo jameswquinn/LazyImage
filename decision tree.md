@@ -1,53 +1,44 @@
 ```mermaid
 graph TD
-    A[Start] --> B{Is image critical?}
-    B -->|Yes| C[Load immediately]
-    B -->|No| D{Native lazy loading supported?}
-    D -->|Yes| E[Use native lazy loading]
-    D -->|No| F{Intersection Observer supported?}
-    F -->|Yes| G[Use Intersection Observer]
-    F -->|No| H{Load Intersection Observer polyfill}
-    H -->|Success| G
-    H -->|Failure| I[Use fallback timeout]
+    A[Start] --> B{Image Format}
+    B -->|SVG| C[Render as object]
+    B -->|iframe| D[Render as iframe]
+    B -->|Other| E{Critical or Native Lazy Loading?}
     
-    C --> J{Is format WebP?}
-    E --> J
-    G --> J
+    E -->|Yes| F[Load Immediately]
+    E -->|No| G{IntersectionObserver Support?}
+    
+    G -->|Yes| H[Use IntersectionObserver]
+    G -->|No| I[Use Fallback Timeout]
+    
+    H --> J{In Viewport?}
     I --> J
     
-    J -->|Yes| K{WebP supported?}
-    J -->|No| L[Load image]
+    J -->|Yes| K[Start Loading]
+    J -->|No| L[Show Placeholder]
     
-    K -->|Yes| L
-    K -->|No| M[Load fallback format]
+    K --> M{WebP Support?}
     
-    L --> N{Image loaded successfully?}
-    M --> N
+    M -->|Yes| N[Use WebP Source]
+    M -->|No| O[Use Original Source]
     
-    N -->|Yes| O[Display image]
-    N -->|No| P{Fallback attempted?}
+    N --> P[Load Low-Res Image]
+    O --> P
     
-    P -->|No| Q[Try fallback format]
-    P -->|Yes| R{Load webp-hero polyfill}
+    P --> Q{Low-Res Loaded?}
     
-    Q --> L
+    Q -->|Yes| R[Load High-Res Image]
+    Q -->|No| S{Error?}
     
-    R -->|Success| S[Retry WebP]
-    R -->|Failure| T{Retry attempts left?}
+    R --> T[Display High-Res Image]
     
-    S --> L
+    S -->|Yes| U{Retry Attempts Left?}
+    S -->|No| V[Continue Loading]
     
-    T -->|Yes| U[Wait with exponential backoff]
-    T -->|No| V[Display error message]
+    U -->|Yes| W[Retry Loading]
+    U -->|No| X[Show Error State]
     
-    U --> W{Network condition changed?}
-    W -->|Yes| X[Abort current load]
-    W -->|No| L
-    
-    X --> Y[Update src based on network]
-    Y --> L
-    
-    O --> Z[End]
-    V --> Z
+    W --> S
+    V --> Q
 
 ```
