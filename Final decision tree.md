@@ -21,31 +21,44 @@ graph TD
     K --> L
     
     L -->|No| M[Show placeholder]
-    L -->|Yes| N{Is format 'webp'?}
+    L -->|Yes| N{Is low bandwidth mode active?}
     
-    N -->|Yes| O{Is WebP supported?}
-    N -->|No| P[Load content]
+    N -->|Yes| O[Use low-res version of image]
+    N -->|No| P{Is format 'webp'?}
     
-    O -->|Yes| P
-    O -->|No| Q[Change extension to jpg]
-    Q --> R{Did loading succeed?}
+    O --> P
+    P -->|Yes| Q{Is WebP supported?}
+    P -->|No| R[Load content]
     
-    R -->|Yes| P
-    R -->|No| S[Load WebP polyfill]
-    S --> P
+    Q -->|Yes| R
+    Q -->|No| S[Change extension to jpg]
+    S --> T{Did loading succeed?}
     
-    P --> T{Did loading succeed?}
+    T -->|Yes| R
+    T -->|No| U[Change extension to png]
+    U --> V{Did loading succeed?}
     
-    T -->|Yes| U[Display content]
-    T -->|No| V{Retry attempts left?}
+    V -->|Yes| R
+    V -->|No| W[Load WebP polyfill]
+    W --> R
     
-    V -->|Yes| W[Retry loading]
-    V -->|No| X[Show error message]
+    R --> X{Did loading succeed?}
     
-    W --> P
+    X -->|Yes| Y[Display content]
+    X -->|No| Z{Retry attempts left?}
     
-    M --> Y[End]
-    U --> Y
-    X --> Y
+    Z -->|Yes| AA[Wait for retry delay]
+    Z -->|No| AB[Show error message/component]
+    
+    AA --> R
+    
+    Y --> AC{Maintain aspect ratio?}
+    AC -->|Yes| AD[Adjust image style]
+    AC -->|No| AE[Use default style]
+    
+    AD --> AF[End]
+    AE --> AF
+    M --> AF
+    AB --> AF
 
 ```
