@@ -1,23 +1,23 @@
-.lazy-image-container,
-.lazy-iframe-container {
+/* LazyImage.css */
+
+.lazy-image-container {
   position: relative;
   overflow: hidden;
+  background-color: #f0f0f0; /* Light gray background for loading state */
+  transition: opacity 0.3s ease;
 }
 
-.lazy-image-placeholder,
-.lazy-iframe-placeholder {
+.lazy-image-placeholder {
   position: absolute;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  background-size: cover;
-  background-position: center;
+  object-fit: cover;
   transition: opacity 0.3s ease;
 }
 
-.lazy-image-loaded,
-.lazy-iframe-container iframe {
+.lazy-image-loaded {
   position: absolute;
   top: 0;
   left: 0;
@@ -28,12 +28,79 @@
   transition: opacity 0.3s ease;
 }
 
-.lazy-image-loaded.fade-in,
-.lazy-iframe-container iframe.fade-in {
+.lazy-image-loaded.fade-in {
   opacity: 1;
 }
 
-.lazy-image-loading,
+.lazy-image-loading {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid rgba(0, 0, 0, 0.1);
+  border-radius: 50%;
+  border-top-color: #3498db;
+  animation: spin 1s ease-in-out infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.lazy-image-error {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  background-color: #f8d7da;
+  color: #721c24;
+  padding: 10px;
+  text-align: center;
+}
+
+.lazy-image-error span {
+  font-size: 24px;
+  margin-bottom: 10px;
+}
+
+.lazy-iframe-container {
+  position: relative;
+  overflow: hidden;
+  background-color: #f0f0f0;
+}
+
+.lazy-iframe-placeholder {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-size: cover;
+  background-position: center;
+}
+
+iframe {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  border: none;
+}
+
 .lazy-iframe-loading {
   position: absolute;
   top: 0;
@@ -46,21 +113,6 @@
   background-color: rgba(255, 255, 255, 0.8);
 }
 
-.spinner {
-  width: 40px;
-  height: 40px;
-  border: 4px solid #f3f3f3;
-  border-top: 4px solid #3498db;
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
-
-.lazy-image-error,
 .lazy-iframe-error {
   position: absolute;
   top: 0;
@@ -73,12 +125,32 @@
   align-items: center;
   background-color: #f8d7da;
   color: #721c24;
-  padding: 20px;
+  padding: 10px;
   text-align: center;
 }
 
-.lazy-image-error span,
-.lazy-iframe-error span {
-  font-size: 48px;
-  margin-bottom: 10px;
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .spinner {
+    width: 30px;
+    height: 30px;
+  }
+
+  .lazy-image-error span {
+    font-size: 20px;
+  }
+}
+
+/* High Contrast Mode */
+@media (forced-colors: active) {
+  .spinner {
+    border-color: CanvasText;
+    border-top-color: Highlight;
+  }
+
+  .lazy-image-error {
+    background-color: Canvas;
+    color: CanvasText;
+    border: 1px solid CanvasText;
+  }
 }
