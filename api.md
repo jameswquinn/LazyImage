@@ -1,70 +1,42 @@
-# LazyImage Component API Documentation
+# LazyImage API Documentation
 
 ## Props
 
-| Prop | Type | Default | Description |
-|------|------|---------|-------------|
-| src | string | - | The source URL of the image |
-| alt | string | - | Alternative text for the image |
-| width | number/string | - | Width of the image |
-| height | number/string | - | Height of the image |
-| placeholderSrc | string | - | Source URL for a placeholder image |
-| placeholderContent | node | - | React node to use as placeholder content |
-| placeholderStyle | object | - | Style object for the placeholder |
-| srcSet | string | - | Comma-separated list of image sources for different sizes |
-| sizes | string | - | Sizes attribute for responsive images |
-| lowResSrc | string | - | Low resolution version of the image for slow connections |
-| retryAttempts | number | 3 | Number of retry attempts on load failure |
-| retryDelay | number | 1000 | Initial delay (in ms) between retry attempts |
-| isIframe | boolean | false | Set to true if the content is an iframe instead of an image |
-| backgroundImage | string | lightGrayGif | Background image to use behind placeholders |
-| format | string | '' | Image format (e.g., 'webp', 'svg') |
-| critical | boolean | false | If true, the image will load immediately without lazy loading |
-| onLoad | function | - | Callback function called when the image loads successfully |
-| onError | function | - | Callback function called when the image fails to load |
+The LazyImage component accepts the following props:
+
+| Prop | Type | Required | Default | Description |
+|------|------|----------|---------|-------------|
+| src | string | Yes | - | The source URL of the image to be loaded |
+| alt | string | Yes | - | Alternative text for the image |
+| width | number | Yes | - | The width of the image container |
+| height | number | Yes | - | The height of the image container |
+| placeholderSrc | string | No | - | URL of a placeholder image to show while the main image is loading |
+| srcSet | string | No | - | Comma-separated list of image URLs and their widths for responsive images |
+| sizes | string | No | - | Media conditions indicating which image size to use |
+
+Any additional props passed to the component will be forwarded to the underlying `<img>` element.
 
 ## Usage
 
 ```jsx
+import { h } from 'preact';
 import LazyImage from './LazyImage';
 
-function MyComponent() {
-  return (
-    <LazyImage
-      src="https://example.com/image.jpg"
-      alt="Example image"
-      width={300}
-      height={200}
-      placeholderSrc="https://example.com/placeholder.jpg"
-      lowResSrc="https://example.com/low-res-image.jpg"
-      srcSet="https://example.com/image-300w.jpg 300w, https://example.com/image-600w.jpg 600w"
-      sizes="(max-width: 600px) 300px, 600px"
-      format="webp"
-      critical={false}
-      onLoad={() => console.log('Image loaded')}
-      onError={(error) => console.error('Image load error:', error)}
-    />
-  );
-}
+const MyComponent = () => (
+  <LazyImage
+    src="https://example.com/image.jpg"
+    alt="Example image"
+    width={300}
+    height={200}
+    placeholderSrc="https://example.com/placeholder.jpg"
+  />
+);
 ```
 
-## Features
+## Behavior
 
-- Lazy loading with native support, Intersection Observer, or fallback timeout
-- WebP support with automatic fallback to JPEG/PNG
-- Placeholder image or content while loading
-- Low-resolution image option for slow networks
-- Retry mechanism with exponential backoff
-- Support for responsive images with srcSet and sizes
-- Special handling for SVG images
-- iframe support
-- Accessibility features including proper ARIA attributes
-- Handles network condition changes
-
-## Browser Support
-
-The component aims to support all modern browsers. For older browsers:
-- A polyfill for Intersection Observer is automatically loaded if needed
-- A polyfill for WebP (webp-hero) is attempted if WebP images fail to load
-
-Note: Ensure you have the necessary polyfills available in your project for maximum compatibility.
+- The component will lazy load images as they enter the viewport.
+- If WebP images are not supported by the browser, it will automatically fall back to JPEG.
+- If the Intersection Observer API is not supported, it will load images immediately.
+- A loading spinner will be shown while the image is loading.
+- If the image fails to load, an error message will be displayed.
