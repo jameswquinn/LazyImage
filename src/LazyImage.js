@@ -1,5 +1,6 @@
 import { h } from 'preact';
 import { useEffect, useRef, useState } from 'preact/hooks';
+import './LazyImage.css';  // Import the CSS file
 
 // Helper function to check WebP support
 const checkWebPSupport = () => {
@@ -130,45 +131,18 @@ const LazyImage = ({
 
   return (
     <div 
-      style={{ 
-        width, 
-        height, 
-        background: '#f0f0f0',
-        overflow: 'hidden',
-        position: 'relative'
-      }}
+      className="lazy-image-container"
+      style={{ width, height }}
     >
       {placeholderSrc && loadState !== 'loaded' && (
         <img
           src={placeholderSrc}
           alt=""
-          style={{
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            width: '100%',
-            height: '100%',
-            objectFit: 'cover',
-            filter: 'blur(10px)',
-            transform: 'scale(1.1)',
-          }}
+          className="lazy-image-placeholder"
         />
       )}
       {loadState === 'loading' && (
-        <div 
-          style={{
-            position: 'absolute',
-            top: '50%',
-            left: '50%',
-            transform: 'translate(-50%, -50%)',
-            width: '40px',
-            height: '40px',
-            border: '4px solid #f3f3f3',
-            borderTop: '4px solid #3498db',
-            borderRadius: '50%',
-            animation: 'spin 1s linear infinite',
-          }}
-        />
+        <div className="lazy-image-loading" />
       )}
       {inView && webPSupported !== null && (
         <img
@@ -177,29 +151,13 @@ const LazyImage = ({
           alt={alt}
           onLoad={handleLoad}
           onError={handleError}
-          style={{
-            position: 'relative',
-            width: '100%',
-            height: '100%',
-            objectFit: 'cover',
-            opacity: loadState === 'loaded' ? 1 : 0,
-            transition: 'opacity 0.5s ease-in-out',
-          }}
+          className={`lazy-image ${loadState === 'loaded' ? 'loaded' : ''}`}
           {...props}
         />
       )}
       {loadState === 'error' && (
-        <div
-          style={{
-            position: 'absolute',
-            top: '50%',
-            left: '50%',
-            transform: 'translate(-50%, -50%)',
-            textAlign: 'center',
-            color: '#d63031',
-          }}
-        >
-          <span style={{ fontSize: '24px' }}>⚠️</span>
+        <div className="lazy-image-error">
+          <span className="lazy-image-error-icon">⚠️</span>
           <p>Image failed to load</p>
         </div>
       )}
