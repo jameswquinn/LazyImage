@@ -1,92 +1,77 @@
-// Simple Example
 import { h } from 'preact';
 import LazyImage from './LazyImage';
 
-export const SimpleExample = () => (
-  <LazyImage
-    src="https://example.com/image.jpg"
-    alt="A simple example image"
-    width={300}
-    height={200}
-  />
-);
-
-// Responsive Example
-import { h } from 'preact';
-import LazyImage from './LazyImage';
-
-export const ResponsiveExample = () => (
-  <LazyImage
-    src="https://example.com/image-1000w.jpg"
-    alt="A responsive example image"
-    width="100%"
-    height="auto"
-    srcSet="https://example.com/image-300w.jpg 300w, 
-            https://example.com/image-600w.jpg 600w, 
-            https://example.com/image-1000w.jpg 1000w"
-    sizes="(max-width: 300px) 100vw, 
-           (max-width: 600px) 50vw, 
-           33vw"
-    placeholderSrc="https://example.com/placeholder.jpg"
-  />
-);
-
-// Complex Example
-import { h } from 'preact';
-import { useState } from 'preact/hooks';
-import LazyImage from './LazyImage';
-
-export const ComplexExample = () => {
-  const [imageLoaded, setImageLoaded] = useState(false);
-
+const ExampleComponent = () => {
   return (
-    <div style={{ position: 'relative' }}>
+    <div>
+      {/* Basic usage */}
       <LazyImage
-        src="https://example.com/large-image.webp"
-        alt="A complex example with WebP and fallback"
-        width={800}
-        height={600}
-        format="webp"
-        lowResSrc="https://example.com/low-res-image.jpg"
-        srcSet="https://example.com/large-image-400w.webp 400w, 
-                https://example.com/large-image-800w.webp 800w, 
-                https://example.com/large-image-1200w.webp 1200w"
-        sizes="(max-width: 400px) 100vw, 
-               (max-width: 800px) 50vw, 
-               33vw"
-        placeholderContent={
-          <div style={{ 
-            width: '100%', 
-            height: '100%', 
-            display: 'flex', 
-            justifyContent: 'center', 
-            alignItems: 'center', 
-            backgroundColor: '#f0f0f0' 
-          }}>
-            Loading...
-          </div>
-        }
-        critical={false}
-        retryAttempts={5}
-        retryDelay={2000}
-        onLoad={() => {
-          console.log('Image loaded successfully');
-          setImageLoaded(true);
-        }}
-        onError={(error) => console.error('Image load failed:', error)}
+        src="https://example.com/image.jpg"
+        alt="Example image"
+        width={300}
+        height={200}
       />
-      {imageLoaded && (
-        <div style={{ 
-          position: 'absolute', 
-          bottom: '10px', 
-          right: '10px', 
-          background: 'rgba(0,0,0,0.5)', 
-          color: 'white', 
-          padding: '5px' 
-        }}>
-          Image Loaded!
-        </div>
-      )}
+
+      {/* With placeholder */}
+      <LazyImage
+        src="https://example.com/large-image.jpg"
+        alt="Large image with placeholder"
+        width={600}
+        height={400}
+        placeholderSrc="https://example.com/placeholder.jpg"
+      />
+
+      {/* WebP image with JPEG fallback */}
+      <LazyImage
+        src="https://example.com/image.webp"
+        alt="WebP image with fallback"
+        width={400}
+        height={300}
+      />
+
+      {/* Responsive image with srcSet and sizes */}
+      <LazyImage
+        src="https://example.com/image-1x.jpg"
+        srcSet="https://example.com/image-1x.jpg 1x, https://example.com/image-2x.jpg 2x"
+        sizes="(max-width: 600px) 100vw, 600px"
+        alt="Responsive image"
+        width={600}
+        height={400}
+      />
+
+      {/* Image with additional props */}
+      <LazyImage
+        src="https://example.com/profile.jpg"
+        alt="Profile picture"
+        width={150}
+        height={150}
+        style={{ borderRadius: '50%' }}
+        onClick={() => console.log('Image clicked')}
+      />
+
+      {/* LazyImage in a grid layout */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px' }}>
+        {[1, 2, 3, 4, 5, 6].map((num) => (
+          <LazyImage
+            key={num}
+            src={`https://example.com/image${num}.jpg`}
+            alt={`Grid image ${num}`}
+            width={200}
+            height={150}
+          />
+        ))}
+      </div>
+
+      {/* LazyImage with error handling */}
+      <LazyImage
+        src="https://example.com/nonexistent-image.jpg"
+        alt="This image will fail to load"
+        width={300}
+        height={200}
+        onError={() => console.log('Image failed to load')}
+      />
     </div>
   );
 };
+
+export default ExampleComponent;
