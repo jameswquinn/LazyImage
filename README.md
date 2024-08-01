@@ -29,37 +29,48 @@ graph TD
     H -->|Success| I[Use Intersection Observer]
     H -->|Failure| J[Load immediately]
     
-    E & G & I & J --> K{Is WebP supported?}
+    E & G & I & J --> K{Is WebP format specified?}
     
-    K -->|Yes| L[Use WebP image]
-    K -->|No| M[Use fallback format]
+    K -->|No| L[Use original format]
+    K -->|Yes| M{Is WebP supported?}
     
-    L & M --> N{Is network slow?}
+    M -->|Yes| N[Use WebP image]
+    M -->|No| O[Try fallback format]
     
-    N -->|Yes| O[Use low-res image]
-    N -->|No| P[Use full-res image]
+    O --> P{Did fallback format load?}
     
-    O & P --> Q{Is image in viewport?}
+    P -->|Yes| Q[Use fallback format]
+    P -->|No| R{Attempt to load webp-hero polyfill}
     
-    Q -->|Yes| R{Is image loaded?}
-    Q -->|No| S[Wait for intersection]
+    R -->|Success| S[Use WebP with polyfill]
+    R -->|Failure| T{Retry attempts left?}
     
-    S --> Q
+    L & N & Q & S --> U{Is network slow?}
     
-    R -->|Yes| T[Display image with fade-in]
-    R -->|No| U{Is loading?}
+    U -->|Yes| V[Use low-res image]
+    U -->|No| W[Use full-res image]
     
-    U -->|Yes| V[Show loading spinner]
-    U -->|No| W{Has error occurred?}
+    V & W --> X{Is image in viewport?}
     
-    W -->|Yes| X{Retry attempts left?}
-    W -->|No| Y[Show placeholder]
+    X -->|Yes| Y{Is image loaded?}
+    X -->|No| Z[Wait for intersection]
     
-    X -->|Yes| Z[Retry loading]
-    X -->|No| AA[Show error message]
+    Z --> X
     
-    Z --> U
-    T & V & Y & AA --> AB[End]
+    Y -->|Yes| AA[Display image with fade-in]
+    Y -->|No| AB{Is loading?}
+    
+    AB -->|Yes| AC[Show loading spinner]
+    AB -->|No| AD{Has error occurred?}
+    
+    T -->|Yes| AE[Retry loading]
+    T -->|No| AF[Show error message]
+    
+    AD -->|Yes| T
+    AD -->|No| AG[Show placeholder]
+    
+    AE --> AB
+    AA & AC & AF & AG --> AH[End]
 
 ```
 
