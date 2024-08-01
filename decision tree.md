@@ -1,59 +1,41 @@
 ```mermaid
 graph TD
-    A[Start] --> B{Is it an iframe?}
-    B -->|Yes| C[Render iframe container]
-    B -->|No| D{Is native lazy loading supported?}
-    
+    A[Start] --> B{Is image critical?}
+    B -->|Yes| C[Load immediately]
+    B -->|No| D{Native lazy loading supported?}
     D -->|Yes| E[Use native lazy loading]
-    D -->|No| F{Is Intersection Observer supported?}
-    
+    D -->|No| F{Intersection Observer supported?}
     F -->|Yes| G[Use Intersection Observer]
-    F -->|No| H{Attempt to load IO polyfill}
+    F -->|No| H[Use fallback timeout]
     
-    H -->|Success| I[Use Intersection Observer]
-    H -->|Failure| J[Load immediately]
+    C --> I{Is format WebP?}
+    E --> I
+    G --> I
+    H --> I
     
-    E & G & I & J --> K{Is WebP format specified?}
+    I -->|Yes| J{WebP supported?}
+    I -->|No| K[Load image]
     
-    K -->|No| L[Use original format]
-    K -->|Yes| M{Is WebP supported?}
+    J -->|Yes| K
+    J -->|No| L[Load fallback format]
     
-    M -->|Yes| N[Use WebP image]
-    M -->|No| O[Try fallback format]
+    K --> M{Image loaded successfully?}
+    L --> M
     
-    O --> P{Did fallback format load?}
+    M -->|Yes| N[Display image]
+    M -->|No| O{Retry attempts left?}
     
-    P -->|Yes| Q[Use fallback format]
-    P -->|No| R{Attempt to load webp-hero polyfill}
+    O -->|Yes| P[Wait with exponential backoff]
+    O -->|No| Q[Display error message]
     
-    R -->|Success| S[Use WebP with polyfill]
-    R -->|Failure| T{Retry attempts left?}
+    P --> R{Network condition changed?}
+    R -->|Yes| S[Abort current load]
+    R -->|No| K
     
-    L & N & Q & S --> U{Is network slow?}
+    S --> T[Update src based on network]
+    T --> K
     
-    U -->|Yes| V[Use low-res image]
-    U -->|No| W[Use full-res image]
-    
-    V & W --> X{Is image in viewport?}
-    
-    X -->|Yes| Y{Is image loaded?}
-    X -->|No| Z[Wait for intersection]
-    
-    Z --> X
-    
-    Y -->|Yes| AA[Display image with fade-in]
-    Y -->|No| AB{Is loading?}
-    
-    AB -->|Yes| AC[Show loading spinner]
-    AB -->|No| AD{Has error occurred?}
-    
-    T -->|Yes| AE[Retry loading]
-    T -->|No| AF[Show error message]
-    
-    AD -->|Yes| T
-    AD -->|No| AG[Show placeholder]
-    
-    AE --> AB
-    AA & AC & AF & AG --> AH[End]
+    N --> U[End]
+    Q --> U
 
 ```
