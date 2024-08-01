@@ -23,4 +23,29 @@ graph TD
     M --> Q[End]
     P --> Q
 
+    % Edge Cases
+    R{Is src empty or invalid?} --> |Yes| S[Show error placeholder]
+    A --> R
+    R -->|No| B
+    
+    T{Browser doesn't support lazy loading?} --> |Yes| U[Use intersection observer fallback]
+    B --> T
+    T -->|No| B
+    
+    V{Network connection lost?} --> |Yes| W[Show offline placeholder]
+    L --> V
+    V -->|No| L
+    
+    X{Image dimensions unknown?} --> |Yes| Y[Use default or calculated dimensions]
+    C --> X
+    X -->|No| C
+    
+    Z{Low memory on device?} --> |Yes| AA[Load low-res version only]
+    G --> Z
+    Z -->|No| G
+    
+    AB{CORS issues?} --> |Yes| AC[Show CORS error message]
+    L --> AB
+    AB -->|No| L
+
 ```
