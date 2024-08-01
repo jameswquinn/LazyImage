@@ -23,29 +23,21 @@ graph TD
     M --> Q[End]
     P --> Q
 
-    % Edge Cases
-    R{Is src empty or invalid?} --> |Yes| S[Show error placeholder]
-    A --> R
-    R -->|No| B
+    %% Edge Cases
+    R{Is src empty or invalid?} --> |Yes| S[Show placeholder or error state]
+    T{Network connection lost?} --> |Yes| U[Show offline placeholder]
+    V{Image size larger than expected?} --> |Yes| W[Apply max-width/height constraints]
+    X{Low memory on device?} --> |Yes| Y[Use low-res image]
+    Z{Slow network detected?} --> |Yes| AA[Prioritize low-res image loading]
+    AB{User prefers reduced motion?} --> |Yes| AC[Disable loading animations]
+    AD{Image format not supported by browser?} --> |Yes| AE[Fall back to supported format]
     
-    T{Browser doesn't support lazy loading?} --> |Yes| U[Use intersection observer fallback]
-    B --> T
-    T -->|No| B
-    
-    V{Network connection lost?} --> |Yes| W[Show offline placeholder]
-    L --> V
-    V -->|No| L
-    
-    X{Image dimensions unknown?} --> |Yes| Y[Use default or calculated dimensions]
-    C --> X
-    X -->|No| C
-    
-    Z{Low memory on device?} --> |Yes| AA[Load low-res version only]
-    G --> Z
-    Z -->|No| G
-    
-    AB{CORS issues?} --> |Yes| AC[Show CORS error message]
-    L --> AB
-    AB -->|No| L
+    B --> R
+    K --> T
+    K --> V
+    B --> X
+    B --> Z
+    A --> AB
+    C --> AD
 
 ```
