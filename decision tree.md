@@ -6,36 +6,45 @@ graph TD
     D -->|Yes| E[Use native lazy loading]
     D -->|No| F{Intersection Observer supported?}
     F -->|Yes| G[Use Intersection Observer]
-    F -->|No| H[Use fallback timeout]
+    F -->|No| H{Load Intersection Observer polyfill}
+    H -->|Success| G
+    H -->|Failure| I[Use fallback timeout]
     
-    C --> I{Is format WebP?}
-    E --> I
-    G --> I
-    H --> I
+    C --> J{Is format WebP?}
+    E --> J
+    G --> J
+    I --> J
     
-    I -->|Yes| J{WebP supported?}
-    I -->|No| K[Load image]
+    J -->|Yes| K{WebP supported?}
+    J -->|No| L[Load image]
     
-    J -->|Yes| K
-    J -->|No| L[Load fallback format]
+    K -->|Yes| L
+    K -->|No| M[Load fallback format]
     
-    K --> M{Image loaded successfully?}
-    L --> M
+    M -->|Success| L
+    M -->|Failure| N{Load webp-hero polyfill}
+    N -->|Success| O[Retry WebP]
+    N -->|Failure| P[Proceed with fallback]
     
-    M -->|Yes| N[Display image]
-    M -->|No| O{Retry attempts left?}
+    O --> L
+    P --> L
     
-    O -->|Yes| P[Wait with exponential backoff]
-    O -->|No| Q[Display error message]
+    L --> Q{Image loaded successfully?}
     
-    P --> R{Network condition changed?}
-    R -->|Yes| S[Abort current load]
-    R -->|No| K
+    Q -->|Yes| R[Display image]
+    Q -->|No| S{Retry attempts left?}
     
-    S --> T[Update src based on network]
-    T --> K
+    S -->|Yes| T[Wait with exponential backoff]
+    S -->|No| U[Display error message]
     
-    N --> U[End]
-    Q --> U
+    T --> V{Network condition changed?}
+    V -->|Yes| W[Abort current load]
+    V -->|No| L
+    
+    W --> X[Update src based on network]
+    X --> L
+    
+    R --> Y[End]
+    U --> Y
 
 ```
