@@ -11,38 +11,41 @@ graph TD
     E -->|No| G{Is Intersection Observer supported?}
     
     G -->|Yes| H[Use Intersection Observer]
-    G -->|No| I[Load immediately]
+    G -->|No| I[Load Intersection Observer polyfill]
+    I --> J{Polyfill loaded successfully?}
+    J -->|Yes| H
+    J -->|No| K[Load immediately]
     
-    F --> J{Is content in view?}
-    H --> J
-    I --> J
+    F --> L{Is content in view?}
+    H --> L
+    K --> L
     
-    J -->|No| K[Show placeholder]
-    J -->|Yes| L{Is format 'webp'?}
+    L -->|No| M[Show placeholder]
+    L -->|Yes| N{Is format 'webp'?}
     
-    L -->|Yes| M{Is WebP supported?}
-    L -->|No| N[Load content]
+    N -->|Yes| O{Is WebP supported?}
+    N -->|No| P[Load content]
     
-    M -->|Yes| N
-    M -->|No| O[Change extension to jpg]
-    O --> P{Did loading succeed?}
+    O -->|Yes| P
+    O -->|No| Q[Change extension to jpg]
+    Q --> R{Did loading succeed?}
     
-    P -->|Yes| N
-    P -->|No| Q[Load WebP polyfill]
-    Q --> N
+    R -->|Yes| P
+    R -->|No| S[Load WebP polyfill]
+    S --> P
     
-    N --> R{Did loading succeed?}
+    P --> T{Did loading succeed?}
     
-    R -->|Yes| S[Display content]
-    R -->|No| T{Retry attempts left?}
+    T -->|Yes| U[Display content]
+    T -->|No| V{Retry attempts left?}
     
-    T -->|Yes| U[Retry loading]
-    T -->|No| V[Show error message]
+    V -->|Yes| W[Retry loading]
+    V -->|No| X[Show error message]
     
-    U --> N
+    W --> P
     
-    K --> W[End]
-    S --> W
-    V --> W
+    M --> Y[End]
+    U --> Y
+    X --> Y
 
 ```
