@@ -1,139 +1,173 @@
-# LazyImage Component
+# LazyImage Component API Documentation
 
-LazyImage is a versatile and performant React component for lazy loading images and iframes. It provides a smooth user experience with placeholder content, loading indicators, and error handling, while optimizing performance through lazy loading and responsive image techniques.
+## Props
 
-## Features
+The LazyImage component accepts the following props:
 
-- Lazy loading of images and iframes
-- Support for WebP images with automatic fallback
-- Responsive image loading with srcSet and sizes
-- Custom placeholders and loading indicators
-- Error handling with configurable retry mechanism
-- Optimized for slow network conditions
-- Accessibility features with proper ARIA attributes
-- Smooth fade-in effect for loaded images
-- Automatic feature detection and polyfill loading for older browsers
+| Prop | Type | Required | Default | Description |
+|------|------|----------|---------|-------------|
+| src | string | Yes | - | The source URL of the image or iframe |
+| alt | string | Yes | - | Alternative text for the image (also used as iframe title) |
+| width | number or string | No | - | The width of the image or iframe |
+| height | number or string | No | - | The height of the image or iframe |
+| placeholderSrc | string | No | - | URL of a placeholder image to show while loading |
+| placeholderContent | node | No | - | React node to display as placeholder content |
+| placeholderStyle | object | No | - | Additional styles for the placeholder |
+| srcSet | string | No | - | The srcset attribute for responsive images |
+| sizes | string | No | - | The sizes attribute for responsive images |
+| lowResSrc | string | No | - | URL of a low-resolution version of the image for slow networks |
+| retryAttempts | number | No | 3 | Number of retry attempts if loading fails |
+| retryDelay | number | No | 1000 | Delay (in ms) between retry attempts |
+| isIframe | boolean | No | false | Set to true if loading an iframe instead of an image |
+| backgroundImage | string | No | lightGrayGif | URL or data URI for the background of the placeholder |
+| format | string | No | '' | Image format (set to 'webp' to enable WebP support) |
+| onLoad | function | No | - | Callback function called when the image/iframe loads successfully |
+| onError | function | No | - | Callback function called when the image/iframe fails to load |
 
-## Installation
+## Detailed Prop Descriptions
 
-```bash
-npm install lazy-image-component
-```
+### src (required)
+The source URL of the image or iframe to be loaded. This is the primary content that will be lazy-loaded.
 
-or
+### alt (required)
+Alternative text for the image. This is crucial for accessibility. For iframes, this text is used as the iframe's title.
 
-```bash
-yarn add lazy-image-component
-```
+### width
+The width of the image or iframe. Can be a number (interpreted as pixels) or a string (e.g., '100%').
 
-## Usage
+### height
+The height of the image or iframe. Can be a number (interpreted as pixels) or a string (e.g., '100%').
 
-Import the LazyImage component in your React application:
+### placeholderSrc
+URL of an image to be shown while the main image is loading. This should typically be a small, low-quality image that loads quickly.
 
-```javascript
-import LazyImage from 'lazy-image-component';
-```
+### placeholderContent
+A React node to be displayed while the image or iframe is loading. This can be used instead of or in addition to placeholderSrc.
 
-Then use it in your JSX:
+### placeholderStyle
+An object containing CSS styles to be applied to the placeholder.
+
+### srcSet
+A string containing image sources and their sizes for responsive images. This follows the standard srcset attribute format.
+
+### sizes
+A string specifying image sizes for different viewport sizes. This is used in conjunction with srcSet for responsive images.
+
+### lowResSrc
+URL of a low-resolution version of the image. This is used on slow network connections to provide faster initial load times.
+
+### retryAttempts
+The number of times the component should attempt to reload the image or iframe if it fails to load. Default is 3.
+
+### retryDelay
+The delay in milliseconds between retry attempts. Default is 1000ms (1 second).
+
+### isIframe
+Set to true if the component should load an iframe instead of an image. This changes the component's behavior and rendering.
+
+### backgroundImage
+URL or data URI of an image to use as the background of the placeholder. Default is a light gray 1x1 pixel GIF.
+
+### format
+Specifies the image format. Set to 'webp' to enable WebP support with automatic fallback for non-supporting browsers.
+
+### onLoad
+A callback function that is called when the image or iframe successfully loads.
+
+### onError
+A callback function that is called if the image or iframe fails to load after all retry attempts.
+
+## Usage Examples
+
+### Basic Usage
 
 ```javascript
 <LazyImage
   src="path/to/image.jpg"
-  alt="Description of the image"
+  alt="A beautiful landscape"
   width={800}
   height={600}
-  placeholderSrc="path/to/placeholder.jpg"
-  srcSet="path/to/image-320w.jpg 320w, path/to/image-480w.jpg 480w, path/to/image-800w.jpg 800w"
-  sizes="(max-width: 320px) 280px, (max-width: 480px) 440px, 800px"
 />
 ```
 
-## API
+### With Responsive Images
 
-For a full list of available props and detailed usage examples, please refer to the [API Documentation](./API.md).
+```javascript
+<LazyImage
+  src="path/to/image.jpg"
+  alt="A responsive image"
+  srcSet="path/to/image-320w.jpg 320w, path/to/image-480w.jpg 480w, path/to/image-800w.jpg 800w"
+  sizes="(max-width: 320px) 280px, (max-width: 480px) 440px, 800px"
+  width="100%"
+  height="auto"
+/>
+```
 
-## Browser Support
+### With WebP Support
 
-LazyImage is designed to work in all modern browsers. For older browsers that don't support the Intersection Observer API, a polyfill is automatically loaded to ensure compatibility.
+```javascript
+<LazyImage
+  src="path/to/image.webp"
+  alt="A WebP image"
+  format="webp"
+  width={600}
+  height={400}
+/>
+```
 
-## Performance Considerations
+### Loading an Iframe
 
-- LazyImage uses the Intersection Observer API (with a polyfill for older browsers) to efficiently detect when images enter the viewport.
-- Images are only loaded when they come into view, reducing initial page load time and saving bandwidth.
-- The component supports WebP images with automatic fallback, allowing for smaller file sizes in supporting browsers.
-- For slow network conditions, a low-resolution version of the image can be specified to load first.
+```javascript
+<LazyImage
+  src="https://www.example.com/embed"
+  alt="An embedded iframe"
+  isIframe={true}
+  width="100%"
+  height={400}
+/>
+```
 
-## Accessibility
+### With Custom Placeholder
 
-LazyImage is built with accessibility in mind:
-- Proper `alt` text is required for all images.
-- ARIA attributes are used to communicate loading and error states to screen readers.
-- The component ensures that non-visual users don't download images unnecessarily.
+```javascript
+<LazyImage
+  src="path/to/image.jpg"
+  alt="Image with custom placeholder"
+  width={500}
+  height={300}
+  placeholderContent={<div>Loading...</div>}
+  placeholderStyle={{ backgroundColor: '#f0f0f0', color: '#333' }}
+/>
+```
 
-## How It Works
+### With Low-Res Image for Slow Networks
 
-The LazyImage component follows a series of logical steps to efficiently load and display images or iframes:
+```javascript
+<LazyImage
+  src="path/to/high-res-image.jpg"
+  lowResSrc="path/to/low-res-image.jpg"
+  alt="Image with low-res fallback"
+  width={800}
+  height={600}
+/>
+```
 
-1. It first determines whether it's dealing with an image or an iframe.
-2. For images, it checks for native lazy loading support, using it if available.
-3. If native lazy loading isn't supported, it falls back to using the Intersection Observer API.
-4. When Intersection Observer isn't supported, it attempts to load a polyfill.
-5. It checks for WebP support and uses WebP images when possible for better performance.
-6. The component assesses network conditions and may use a low-resolution image on slow connections.
-7. As the image loads, it displays a loading spinner or custom placeholder.
-8. Upon successful load, the image fades in smoothly.
-9. If loading fails, it attempts to retry a configurable number of times before showing an error message.
+### With Load and Error Callbacks
 
-Throughout this process, the component manages accessibility considerations and provides appropriate feedback to users and assistive technologies.
+```javascript
+<LazyImage
+  src="path/to/image.jpg"
+  alt="Image with callbacks"
+  width={600}
+  height={400}
+  onLoad={() => console.log('Image loaded successfully')}
+  onError={(error) => console.error('Image failed to load', error)}
+/>
+```
 
-## Comparison to lazysizes
+## Notes
 
-While lazysizes is a popular and feature-rich lazy loading library, our LazyImage component offers several advantages in certain use cases. Here's a comparison:
-
-### LazyImage Advantages:
-
-1. **React Integration**: LazyImage is built specifically for React applications, providing a more seamless integration with React's component model and lifecycle.
-
-2. **No Additional Markup**: Unlike lazysizes, which requires additional classes and attributes in your HTML, LazyImage encapsulates all lazy loading logic within the component.
-
-3. **Built-in WebP Support**: LazyImage includes native support for WebP images with automatic fallback, without requiring additional plugins.
-
-4. **Iframe Support**: LazyImage can lazy load both images and iframes using the same component, simplifying implementation.
-
-5. **React Server-Side Rendering**: LazyImage is designed to work well with server-side rendering in React applications.
-
-6. **Customizable Placeholders**: LazyImage allows for easy implementation of custom placeholder content while images are loading.
-
-7. **Automatic Polyfill Loading**: LazyImage automatically loads necessary polyfills for older browsers, reducing setup complexity.
-
-### lazysizes Advantages:
-
-1. **Framework Agnostic**: lazysizes works with any JavaScript framework or vanilla JavaScript, not just React applications.
-
-2. **Extensive Plugin Ecosystem**: lazysizes has a wide range of plugins for additional functionality.
-
-3. **Lighter Weight**: For simple use cases, lazysizes might have a smaller footprint as it's not tied to React.
-
-4. **Mature and Battle-tested**: lazysizes has been around longer and is used in many production environments.
-
-### When to Choose LazyImage:
-
-- You're working on a React-based project and want a component that integrates seamlessly.
-- You need built-in support for WebP images and iframes.
-- You prefer a declarative approach with all logic encapsulated in a component.
-
-### When to Choose lazysizes:
-
-- Your project is not React-based or you need a framework-agnostic solution.
-- You require some of the specific plugins or features offered by lazysizes.
-- You're working on a very large site and need the battle-tested reliability of a more mature library.
-
-Both LazyImage and lazysizes are excellent choices for implementing lazy loading. The best choice depends on your specific project requirements, tech stack, and preferences.
-
-## Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request.
-
-## License
-
-This project is licensed under the MIT License.
+- The component automatically handles lazy loading based on browser support. It will use native lazy loading if available, falling back to Intersection Observer API with a polyfill for older browsers.
+- WebP images are automatically handled when the `format` prop is set to 'webp'. The component will use WebP in supporting browsers and fall back to the specified `src` in non-supporting browsers.
+- For best performance, provide appropriately sized images and use the `srcSet` and `sizes` props for responsive images.
+- When using with iframes, ensure that the content being loaded is from a trusted source and complies with your site's Content Security Policy (CSP).
