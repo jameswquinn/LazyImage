@@ -14,6 +14,21 @@ const checkWebPSupport = () => {
   });
 };
 
+// Function to check specific WebP features
+const checkWebPFeature = (feature) => {
+  return new Promise((resolve) => {
+    const kTestImages = {
+      lossy: "UklGRiIAAABXRUJQVlA4IBYAAAAwAQCdASoBAAEADsD+JaQAA3AAAAAA",
+      lossless: "UklGRhoAAABXRUJQVlA4TA0AAAAvAAAAEAcQERGIiP4HAA==",
+      alpha: "UklGRkoAAABXRUJQVlA4WAoAAAAQAAAAAAAAAAAAQUxQSAwAAAARBxAR/Q9ERP8DAABWUDggGAAAABQBAJ0BKgEAAQAAAP4AAA3AAP7mtQAAAA=="
+    };
+    const img = new Image();
+    img.onload = () => resolve(img.width > 0 && img.height > 0);
+    img.onerror = () => resolve(false);
+    img.src = "data:image/webp;base64," + kTestImages[feature];
+  });
+};
+
 // Function to dynamically load the Intersection Observer polyfill
 const loadIntersectionObserverPolyfill = () => {
   return new Promise((resolve, reject) => {
@@ -38,7 +53,7 @@ const loadWebpHeroPolyfill = () => {
 
 const useFeatureDetection = (format) => {
   const [features, setFeatures] = useState({
-    webPSupported: null,
+    webPSupport: { lossy: null, lossless: null, alpha: null },
     supportsLazyLoading: 'loading' in HTMLImageElement.prototype,
     intersectionObserverSupported: 'IntersectionObserver' in window,
     slowNetwork: false,
@@ -47,8 +62,12 @@ const useFeatureDetection = (format) => {
   useEffect(() => {
     const detectFeatures = async () => {
       if (format === 'webp') {
-        const webPSupported = await checkWebPSupport();
-        setFeatures(prev => ({ ...prev, webPSupported }));
+        const webPSupport = {
+          lossy: await checkWebPFeature('lossy'),
+          lossless: await checkWebPFeature('lossless'),
+          alpha: await checkWebPFeature('alpha')
+        };
+        setFeatures(prev => ({ ...prev, webPSupport }));
       }
 
       if (!features.intersectionObserverSupported) {
@@ -65,7 +84,7 @@ const useFeatureDetection = (format) => {
         const updateNetworkStatus = () => {
           setFeatures(prev => ({
             ...prev,
-            slowNetwork: navigator.connection.effectiveType === 'slow-2g' || navigator.connection.effectiveType === '2g'
+            slowNetwork: ['slow-2g', '2g'].includes(navigator.connection.effectiveType)
           }));
         };
         updateNetworkStatus();
@@ -94,26 +113,46 @@ const useLazyLoading = (features, elementRef, setInView, setLoadState) => {
         threshold: 0.01,
       };
 
-      const observer = new IntersectionObserver((entries) => {
+      let observer;
+      let timeoutId;
+
+      const handleIntersection = (entries) => {
         entries.forEach((entry) => {
           if (entry.isIntersecting) {
-            setInView(true);
-            setLoadState('loading');
-            observer.unobserve(entry.target);
+            // Clear any existing timeout
+            if (timeoutId) {
+              clearTimeout(timeoutId);
+            }
+            // Set a small delay before triggering the load
+            timeoutId = setTimeout(() => {
+              setInView(true);
+              setLoadState('loading');
+              observer.unobserve(entry.target);
+            }, 100); // 100ms delay to handle rapid scrolling
+          } else {
+            // If the image is no longer in view, clear the timeout
+            if (timeoutId) {
+              clearTimeout(timeoutId);
+            }
           }
         });
-      }, observerOptions);
+      };
+
+      observer = new IntersectionObserver(handleIntersection, observerOptions);
 
       if (elementRef.current) observer.observe(elementRef.current);
 
       return () => {
         if (elementRef.current) observer.unobserve(elementRef.current);
+        if (timeoutId) clearTimeout(timeoutId);
       };
     } else {
-      // If Intersection Observer is not supported even after attempting to load the polyfill,
-      // we fall back to loading the image immediately
-      setInView(true);
-      setLoadState('loading');
+      // Fallback: start loading after a short delay
+      const timer = setTimeout(() => {
+        setInView(true);
+        setLoadState('loading');
+      }, 1000);
+      return () => clearTimeout(timer);
     }
   }, [features, elementRef, setInView, setLoadState]);
 };
@@ -136,18 +175,46 @@ const LazyImage = ({
   format = '',
   onLoad,
   onError,
+  critical = false,
   ...props
 }) => {
-  const [inView, setInView] = useState(false);
-  const [loadState, setLoadState] = useState('initial');
+  const [inView, setInView] = useState(critical);
+  const [loadState, setLoadState] = useState(critical ? 'loading' : 'initial');
   const [attemptsLeft, setAttemptsLeft] = useState(retryAttempts);
   const [currentSrc, setCurrentSrc] = useState(src);
   const [fallbackAttempted, setFallbackAttempted] = useState(false);
   const [webpPolyfillLoaded, setWebpPolyfillLoaded] = useState(false);
   const elementRef = useRef(null);
+  const [networkCondition, setNetworkCondition] = useState('fast');
+  const abortControllerRef = useRef(null);
 
   const features = useFeatureDetection(format);
   useLazyLoading(features, elementRef, setInView, setLoadState);
+
+  useEffect(() => {
+    const updateNetworkCondition = () => {
+      if ('connection' in navigator && 'effectiveType' in navigator.connection) {
+        setNetworkCondition(navigator.connection.effectiveType);
+      }
+    };
+    updateNetworkCondition();
+    window.addEventListener('online', updateNetworkCondition);
+    window.addEventListener('offline', updateNetworkCondition);
+    if ('connection' in navigator) {
+      navigator.connection.addEventListener('change', updateNetworkCondition);
+    }
+    return () => {
+      window.removeEventListener('online', updateNetworkCondition);
+      window.removeEventListener('offline', updateNetworkCondition);
+      if ('connection' in navigator) {
+        navigator.connection.removeEventListener('change', updateNetworkCondition);
+      }
+    };
+  }, []);
+
+  const getRetryDelay = useCallback((attempt) => {
+    return Math.min(1000 * 2 ** attempt, 30000); // Max delay of 30 seconds
+  }, []);
 
   const handleLoad = useCallback(() => {
     setLoadState('loaded');
@@ -157,59 +224,116 @@ const LazyImage = ({
     if (onLoad) onLoad();
   }, [onLoad]);
 
-  const handleError = useCallback(async () => {
-    if (format === 'webp' && !features.webPSupported && !fallbackAttempted) {
-      // Try loading fallback format
+  const handleError = useCallback(async (error) => {
+    console.error('Image load error:', error);
+
+    if (error.name === 'AbortError') {
+      console.log('Image load aborted due to network change or component unmount');
+      return;
+    }
+
+    if (error.name === 'SecurityError') {
+      console.error('CORS issue detected');
+      setLoadState('error');
+      if (onError) onError(new Error('CORS error: Image could not be loaded due to security restrictions'));
+      return;
+    }
+
+    if (format === 'webp' && !features.webPSupport.lossy && !fallbackAttempted) {
       setCurrentSrc(src.replace(/\.webp$/, '.jpg'));
       setFallbackAttempted(true);
     } else if (fallbackAttempted && !webpPolyfillLoaded) {
-      // Both WebP and fallback failed, try loading webp-hero polyfill
       try {
         await loadWebpHeroPolyfill();
         setWebpPolyfillLoaded(true);
-        // Revert to original WebP source
         setCurrentSrc(src);
         console.log('WebP polyfill loaded successfully');
-      } catch (error) {
-        console.error('Failed to load WebP polyfill:', error);
-        if (attemptsLeft > 0) {
-          setAttemptsLeft(attemptsLeft - 1);
-          setLoadState('initial');
-          setTimeout(() => setLoadState('loading'), retryDelay);
-        } else {
-          setLoadState('error');
-          if (onError) onError(new Error('Image failed to load after multiple attempts'));
-        }
+      } catch (polyfillError) {
+        console.error('Failed to load WebP polyfill:', polyfillError);
+        handleRetry();
       }
-    } else if (attemptsLeft > 0) {
+    } else {
+      handleRetry();
+    }
+  }, [format, features.webPSupport, fallbackAttempted, webpPolyfillLoaded, src, onError]);
+
+  const handleRetry = useCallback(() => {
+    if (attemptsLeft > 0) {
+      const delay = getRetryDelay(retryAttempts - attemptsLeft);
       setAttemptsLeft(attemptsLeft - 1);
       setLoadState('initial');
-      setTimeout(() => setLoadState('loading'), retryDelay);
+      setTimeout(() => {
+        if (networkCondition !== 'offline') {
+          setLoadState('loading');
+        }
+      }, delay);
     } else {
       setLoadState('error');
       if (onError) onError(new Error('Image failed to load after multiple attempts'));
     }
-  }, [format, features.webPSupported, fallbackAttempted, webpPolyfillLoaded, src, attemptsLeft, retryDelay, onError]);
+  }, [attemptsLeft, retryAttempts, networkCondition, getRetryDelay, onError]);
 
   useEffect(() => {
-    if (features.slowNetwork && lowResSrc) {
-      setCurrentSrc(lowResSrc);
+    if (networkCondition === '2g' || networkCondition === 'slow-2g') {
+      if (lowResSrc) {
+        setCurrentSrc(lowResSrc);
+      }
+    } else {
+      setCurrentSrc(src);
     }
-  }, [features.slowNetwork, lowResSrc]);
 
-  const commonProps = {
+    // Abort any ongoing fetch when network conditions change
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+    abortControllerRef.current = new AbortController();
+
+    // Reset loading state when network condition changes
+    if (loadState === 'loading') {
+      setLoadState('initial');
+      setTimeout(() => setLoadState('loading'), 0);
+    }
+  }, [networkCondition, lowResSrc, src, loadState]);
+
+  useEffect(() => {
+    return () => {
+      // Abort any ongoing fetch when component unmounts
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+    };
+  }, []);
+
+  const imageProps = {
     ref: elementRef,
-    src: features.supportsLazyLoading ? currentSrc : undefined,
+    src: features.supportsLazyLoading || inView ? currentSrc : undefined,
     srcSet,
     sizes,
     alt,
     onLoad: handleLoad,
     onError: handleError,
-    loading: features.supportsLazyLoading ? 'lazy' : undefined,
+    loading: critical || features.supportsLazyLoading ? 'eager' : 'lazy',
     width,
     height,
+    crossOrigin: "anonymous",
     ...props,
   };
+
+  if (format === 'svg') {
+    return (
+      <object
+        data={currentSrc}
+        type="image/svg+xml"
+        width={width}
+        height={height}
+        aria-label={alt}
+        onLoad={handleLoad}
+        onError={handleError}
+      >
+        {alt}
+      </object>
+    );
+  }
 
   if (isIframe) {
     return (
@@ -224,7 +348,7 @@ const LazyImage = ({
         )}
         {inView && (
           <iframe
-            {...commonProps}
+            {...imageProps}
             src={currentSrc}
             title={alt}
           />
@@ -268,27 +392,4 @@ const LazyImage = ({
           <div class="spinner" role="progressbar" aria-valuetext="Loading image" />
         </div>
       )}
-      {(inView || features.supportsLazyLoading) && (
-        <picture>
-          {format === 'webp' && (features.webPSupported || webpPolyfillLoaded) && (
-            <source srcSet={srcSet} sizes={sizes} type="image/webp" />
-          )}
-          <source srcSet={srcSet} sizes={sizes} />
-          <img
-            {...commonProps}
-            class={`lazy-image-loaded ${loadState === 'error' ? 'lazy-image-error' : ''}`}
-            aria-live={loadState === 'error' ? 'assertive' : 'polite'}
-          />
-        </picture>
-      )}
-      {loadState === 'error' && (
-        <div class="lazy-image-error" role="alert">
-          <span role="img" aria-label="Error">⚠️</span>
-          <p>Image failed to load. Please try refreshing the page.</p>
-        </div>
-      )}
-    </div>
-  );
-};
-
-export default LazyImage;
+      {(inView || features
