@@ -1,44 +1,40 @@
 ```mermaid
 graph TD
-    A[Start] --> B{Image Format}
-    B -->|SVG| C[Render as object]
-    B -->|iframe| D[Render as iframe]
-    B -->|Other| E{Critical or Native Lazy Loading?}
+    A[Start] --> B{Feature Detection}
+    B -->|WebP Support?| C{IntersectionObserver Support?}
+    B -->|Lazy Loading Support?| D{Slow Network?}
     
-    E -->|Yes| F[Load Immediately]
-    E -->|No| G{IntersectionObserver Support?}
+    C -->|No| E[Load IntersectionObserver Polyfill]
+    E --> F{Image Format}
     
-    G -->|Yes| H[Use IntersectionObserver]
-    G -->|No| I[Use Fallback Timeout]
+    C -->|Yes| F
     
-    H --> J{In Viewport?}
-    I --> J
+    F -->|SVG| G[Render as object]
+    F -->|iframe| H[Render as iframe]
+    F -->|Other| I{Loading Strategy}
     
-    J -->|Yes| K[Start Loading]
-    J -->|No| L[Show Placeholder]
+    I -->|Critical or Native Lazy Loading| J[Load Immediately]
+    I -->|Use IntersectionObserver| K[Load when in view]
     
-    K --> M{WebP Support?}
+    J --> L{WebP Requested?}
+    K --> L
     
-    M -->|Yes| N[Use WebP Source]
-    M -->|No| O[Use Original Source]
+    L -->|Yes, but not supported| M[Load WebP-hero Polyfill]
+    M --> N{Image Quality}
+    L -->|No or Yes and supported| N
     
-    N --> P[Load Low-Res Image]
-    O --> P
+    N --> O[Start with Low-Res]
+    O --> P[Load High-Res when Low-Res loaded]
     
-    P --> Q{Low-Res Loaded?}
+    P --> Q{Error Handling}
+    Q -->|Retry< Max Attempts| R[Retry Loading]
+    R --> Q
+    Q -->|Max Attempts Reached| S[Show Error State]
     
-    Q -->|Yes| R[Load High-Res Image]
-    Q -->|No| S{Error?}
+    Q -->|Success| T[Render Image]
+    T --> U[Apply Accessibility Attributes]
+    U --> V[End]
     
-    R --> T[Display High-Res Image]
-    
-    S -->|Yes| U{Retry Attempts Left?}
-    S -->|No| V[Continue Loading]
-    
-    U -->|Yes| W[Retry Loading]
-    U -->|No| X[Show Error State]
-    
-    W --> S
-    V --> Q
+    S --> V
 
 ```
