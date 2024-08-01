@@ -21,30 +21,33 @@ graph TD
     K -->|Yes| L
     K -->|No| M[Load fallback format]
     
-    M -->|Success| L
-    M -->|Failure| N{Load webp-hero polyfill}
-    N -->|Success| O[Retry WebP]
-    N -->|Failure| P[Proceed with fallback]
+    L --> N{Image loaded successfully?}
+    M --> N
     
-    O --> L
-    P --> L
+    N -->|Yes| O[Display image]
+    N -->|No| P{Fallback attempted?}
     
-    L --> Q{Image loaded successfully?}
+    P -->|No| Q[Try fallback format]
+    P -->|Yes| R{Load webp-hero polyfill}
     
-    Q -->|Yes| R[Display image]
-    Q -->|No| S{Retry attempts left?}
+    Q --> L
     
-    S -->|Yes| T[Wait with exponential backoff]
-    S -->|No| U[Display error message]
+    R -->|Success| S[Retry WebP]
+    R -->|Failure| T{Retry attempts left?}
     
-    T --> V{Network condition changed?}
-    V -->|Yes| W[Abort current load]
-    V -->|No| L
+    S --> L
     
-    W --> X[Update src based on network]
-    X --> L
+    T -->|Yes| U[Wait with exponential backoff]
+    T -->|No| V[Display error message]
     
-    R --> Y[End]
-    U --> Y
+    U --> W{Network condition changed?}
+    W -->|Yes| X[Abort current load]
+    W -->|No| L
+    
+    X --> Y[Update src based on network]
+    Y --> L
+    
+    O --> Z[End]
+    V --> Z
 
 ```
