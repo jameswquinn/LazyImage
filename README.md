@@ -13,6 +13,51 @@ LazyImage is a versatile and performant React component for lazy loading images 
 - Accessibility features with proper ARIA attributes
 - Smooth fade-in effect for loaded images
 - Automatic feature detection and polyfill loading for older browsers
+graph TD
+    A[Start] --> B{Is it an iframe?}
+    B -->|Yes| C[Render iframe container]
+    B -->|No| D{Is native lazy loading supported?}
+    
+    D -->|Yes| E[Use native lazy loading]
+    D -->|No| F{Is Intersection Observer supported?}
+    
+    F -->|Yes| G[Use Intersection Observer]
+    F -->|No| H{Attempt to load IO polyfill}
+    
+    H -->|Success| I[Use Intersection Observer]
+    H -->|Failure| J[Load immediately]
+    
+    E & G & I & J --> K{Is WebP supported?}
+    
+    K -->|Yes| L[Use WebP image]
+    K -->|No| M[Use fallback format]
+    
+    L & M --> N{Is network slow?}
+    
+    N -->|Yes| O[Use low-res image]
+    N -->|No| P[Use full-res image]
+    
+    O & P --> Q{Is image in viewport?}
+    
+    Q -->|Yes| R{Is image loaded?}
+    Q -->|No| S[Wait for intersection]
+    
+    S --> Q
+    
+    R -->|Yes| T[Display image with fade-in]
+    R -->|No| U{Is loading?}
+    
+    U -->|Yes| V[Show loading spinner]
+    U -->|No| W{Has error occurred?}
+    
+    W -->|Yes| X{Retry attempts left?}
+    W -->|No| Y[Show placeholder]
+    
+    X -->|Yes| Z[Retry loading]
+    X -->|No| AA[Show error message]
+    
+    Z --> U
+    T & V & Y & AA --> AB[End]
 
 ## Installation
 
