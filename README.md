@@ -1,78 +1,20 @@
 # LazyImage Component
 
-LazyImage is a versatile and performant React component for lazy loading images and iframes. It provides a smooth user experience with placeholder content, loading indicators, and error handling, while optimizing performance through lazy loading and responsive image techniques.
+LazyImage is a highly optimized, feature-rich React component for lazy loading images and iframes. It provides a seamless experience for users across different devices and network conditions while optimizing performance and resource usage.
 
 ## Features
 
-- Lazy loading of images and iframes
-- Support for WebP images with automatic fallback
-- Responsive image loading with srcSet and sizes
-- Custom placeholders and loading indicators
-- Error handling with configurable retry mechanism
-- Optimized for slow network conditions
-- Accessibility features with proper ARIA attributes
-- Smooth fade-in effect for loaded images
-- Automatic feature detection and polyfill loading for older browsers
-
-```mermaid
-graph TD
-    A[Start] --> B{Is it an iframe?}
-    B -->|Yes| C[Render iframe container]
-    B -->|No| D{Is native lazy loading supported?}
-    
-    D -->|Yes| E[Use native lazy loading]
-    D -->|No| F{Is Intersection Observer supported?}
-    
-    F -->|Yes| G[Use Intersection Observer]
-    F -->|No| H{Attempt to load IO polyfill}
-    
-    H -->|Success| I[Use Intersection Observer]
-    H -->|Failure| J[Load immediately]
-    
-    E & G & I & J --> K{Is WebP format specified?}
-    
-    K -->|No| L[Use original format]
-    K -->|Yes| M{Is WebP supported?}
-    
-    M -->|Yes| N[Use WebP image]
-    M -->|No| O[Try fallback format]
-    
-    O --> P{Did fallback format load?}
-    
-    P -->|Yes| Q[Use fallback format]
-    P -->|No| R{Attempt to load webp-hero polyfill}
-    
-    R -->|Success| S[Use WebP with polyfill]
-    R -->|Failure| T{Retry attempts left?}
-    
-    L & N & Q & S --> U{Is network slow?}
-    
-    U -->|Yes| V[Use low-res image]
-    U -->|No| W[Use full-res image]
-    
-    V & W --> X{Is image in viewport?}
-    
-    X -->|Yes| Y{Is image loaded?}
-    X -->|No| Z[Wait for intersection]
-    
-    Z --> X
-    
-    Y -->|Yes| AA[Display image with fade-in]
-    Y -->|No| AB{Is loading?}
-    
-    AB -->|Yes| AC[Show loading spinner]
-    AB -->|No| AD{Has error occurred?}
-    
-    T -->|Yes| AE[Retry loading]
-    T -->|No| AF[Show error message]
-    
-    AD -->|Yes| T
-    AD -->|No| AG[Show placeholder]
-    
-    AE --> AB
-    AA & AC & AF & AG --> AH[End]
-
-```
+- Lazy loading with multiple fallback mechanisms
+- WebP support with automatic fallback
+- Placeholder support (image or custom content)
+- Low-resolution image option for slow networks
+- Retry mechanism with exponential backoff
+- Responsive image support (srcSet and sizes)
+- Special handling for SVG images
+- iframe support
+- Accessibility features
+- Comprehensive error handling
+- Adapts to changing network conditions
 
 ## Installation
 
@@ -88,111 +30,67 @@ yarn add lazy-image-component
 
 ## Usage
 
-Import the LazyImage component in your React application:
+Here's a basic example of how to use the LazyImage component:
 
-```javascript
+```jsx
 import LazyImage from 'lazy-image-component';
-```
 
-Then use it in your JSX:
-
-```javascript
-<LazyImage
-  src="path/to/image.jpg"
-  alt="Description of the image"
-  width={800}
-  height={600}
-  placeholderSrc="path/to/placeholder.jpg"
-  srcSet="path/to/image-320w.jpg 320w, path/to/image-480w.jpg 480w, path/to/image-800w.jpg 800w"
-  sizes="(max-width: 320px) 280px, (max-width: 480px) 440px, 800px"
-/>
+function MyComponent() {
+  return (
+    <LazyImage
+      src="https://example.com/image.jpg"
+      alt="Example image"
+      width={300}
+      height={200}
+      placeholderSrc="https://example.com/placeholder.jpg"
+      lowResSrc="https://example.com/low-res-image.jpg"
+      srcSet="https://example.com/image-300w.jpg 300w, https://example.com/image-600w.jpg 600w"
+      sizes="(max-width: 600px) 300px, 600px"
+      format="webp"
+      critical={false}
+      onLoad={() => console.log('Image loaded')}
+      onError={(error) => console.error('Image load error:', error)}
+    />
+  );
+}
 ```
 
 ## API
 
-For a full list of available props and detailed usage examples, please refer to the [API Documentation](./API.md).
+For a full list of props and their descriptions, please see the [API documentation](./API.md).
 
 ## Browser Support
 
-LazyImage is designed to work in all modern browsers. For older browsers that don't support the Intersection Observer API, a polyfill is automatically loaded to ensure compatibility.
+LazyImage aims to support all modern browsers. For older browsers:
+- A polyfill for Intersection Observer is automatically loaded if needed
+- A polyfill for WebP (webp-hero) is attempted if WebP images fail to load
+
+Ensure you have the necessary polyfills available in your project for maximum compatibility.
 
 ## Performance Considerations
 
-- LazyImage uses the Intersection Observer API (with a polyfill for older browsers) to efficiently detect when images enter the viewport.
-- Images are only loaded when they come into view, reducing initial page load time and saving bandwidth.
-- The component supports WebP images with automatic fallback, allowing for smaller file sizes in supporting browsers.
-- For slow network conditions, a low-resolution version of the image can be specified to load first.
+- Uses native lazy loading when available
+- Implements Intersection Observer for efficient lazy loading in supported browsers
+- Adapts to network conditions, using lower resolution images on slow connections
+- Implements retry mechanism with exponential backoff to handle temporary network issues
 
 ## Accessibility
 
-LazyImage is built with accessibility in mind:
-- Proper `alt` text is required for all images.
-- ARIA attributes are used to communicate loading and error states to screen readers.
-- The component ensures that non-visual users don't download images unnecessarily.
-
-## How It Works
-
-The LazyImage component follows a series of logical steps to efficiently load and display images or iframes:
-
-1. It first determines whether it's dealing with an image or an iframe.
-2. For images, it checks for native lazy loading support, using it if available.
-3. If native lazy loading isn't supported, it falls back to using the Intersection Observer API.
-4. When Intersection Observer isn't supported, it attempts to load a polyfill.
-5. It checks for WebP support and uses WebP images when possible for better performance.
-6. The component assesses network conditions and may use a low-resolution image on slow connections.
-7. As the image loads, it displays a loading spinner or custom placeholder.
-8. Upon successful load, the image fades in smoothly.
-9. If loading fails, it attempts to retry a configurable number of times before showing an error message.
-
-Throughout this process, the component manages accessibility considerations and provides appropriate feedback to users and assistive technologies.
-
-## Comparison to lazysizes
-
-While lazysizes is a popular and feature-rich lazy loading library, our LazyImage component offers several advantages in certain use cases. Here's a comparison:
-
-### LazyImage Advantages:
-
-1. **React Integration**: LazyImage is built specifically for React applications, providing a more seamless integration with React's component model and lifecycle.
-
-2. **No Additional Markup**: Unlike lazysizes, which requires additional classes and attributes in your HTML, LazyImage encapsulates all lazy loading logic within the component.
-
-3. **Built-in WebP Support**: LazyImage includes native support for WebP images with automatic fallback, without requiring additional plugins.
-
-4. **Iframe Support**: LazyImage can lazy load both images and iframes using the same component, simplifying implementation.
-
-5. **React Server-Side Rendering**: LazyImage is designed to work well with server-side rendering in React applications.
-
-6. **Customizable Placeholders**: LazyImage allows for easy implementation of custom placeholder content while images are loading.
-
-7. **Automatic Polyfill Loading**: LazyImage automatically loads necessary polyfills for older browsers, reducing setup complexity.
-
-### lazysizes Advantages:
-
-1. **Framework Agnostic**: lazysizes works with any JavaScript framework or vanilla JavaScript, not just React applications.
-
-2. **Extensive Plugin Ecosystem**: lazysizes has a wide range of plugins for additional functionality.
-
-3. **Lighter Weight**: For simple use cases, lazysizes might have a smaller footprint as it's not tied to React.
-
-4. **Mature and Battle-tested**: lazysizes has been around longer and is used in many production environments.
-
-### When to Choose LazyImage:
-
-- You're working on a React-based project and want a component that integrates seamlessly.
-- You need built-in support for WebP images and iframes.
-- You prefer a declarative approach with all logic encapsulated in a component.
-
-### When to Choose lazysizes:
-
-- Your project is not React-based or you need a framework-agnostic solution.
-- You require some of the specific plugins or features offered by lazysizes.
-- You're working on a very large site and need the battle-tested reliability of a more mature library.
-
-Both LazyImage and lazysizes are excellent choices for implementing lazy loading. The best choice depends on your specific project requirements, tech stack, and preferences.
+- Provides proper alt text for images
+- Uses ARIA attributes for loading and error states
+- Ensures compatibility with screen readers
 
 ## Contributing
 
 Contributions are welcome! Please feel free to submit a Pull Request.
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
+
+Please ensure that your code adheres to the existing style and that all tests pass before submitting a pull request.
 
 ## License
 
