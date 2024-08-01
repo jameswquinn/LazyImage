@@ -1,43 +1,48 @@
 ```mermaid
 graph TD
-    A[Start] --> B{Is image in view or critical?}
-    B -->|Yes| C{What's the image format?}
-    B -->|No| D[Show placeholder]
-    C -->|SVG| E[Render SVG object]
-    C -->|iframe| F[Render iframe]
-    C -->|Other| G{Is WebP supported?}
-    G -->|Yes| H[Render picture with WebP source]
-    G -->|No| I[Render picture without WebP]
-    D --> J[Wait for image to come into view]
-    J --> B
-    E --> K[Image rendered]
-    F --> K
-    H --> K
-    I --> K
-    K --> L{Did image load successfully?}
-    L -->|Yes| M[Show high-quality image]
-    L -->|No| N{Retry attempts left?}
-    N -->|Yes| O[Retry loading]
-    N -->|No| P[Show error state]
-    O --> B
-    M --> Q[End]
-    P --> Q
-
-    %% Edge Cases
-    R{Is src empty or invalid?} --> |Yes| S[Show placeholder or error state]
-    T{Network connection lost?} --> |Yes| U[Show offline placeholder]
-    V{Image size larger than expected?} --> |Yes| W[Apply max-width/height constraints]
-    X{Low memory on device?} --> |Yes| Y[Use low-res image]
-    Z{Slow network detected?} --> |Yes| AA[Prioritize low-res image loading]
-    AB{User prefers reduced motion?} --> |Yes| AC[Disable loading animations]
-    AD{Image format not supported by browser?} --> |Yes| AE[Fall back to supported format]
+    A[Start] --> B{Is it an iframe?}
+    B -->|Yes| C[Render iframe container]
+    B -->|No| D[Render image container]
     
-    B --> R
-    K --> T
-    K --> V
-    B --> X
-    B --> Z
-    A --> AB
-    C --> AD
+    C --> E{Is native lazy loading supported?}
+    D --> E
+    
+    E -->|Yes| F[Use native lazy loading]
+    E -->|No| G{Is Intersection Observer supported?}
+    
+    G -->|Yes| H[Use Intersection Observer]
+    G -->|No| I[Load immediately]
+    
+    F --> J{Is content in view?}
+    H --> J
+    I --> J
+    
+    J -->|No| K[Show placeholder]
+    J -->|Yes| L{Is format 'webp'?}
+    
+    L -->|Yes| M{Is WebP supported?}
+    L -->|No| N[Load content]
+    
+    M -->|Yes| N
+    M -->|No| O[Change extension to jpg]
+    O --> P{Did loading succeed?}
+    
+    P -->|Yes| N
+    P -->|No| Q[Load WebP polyfill]
+    Q --> N
+    
+    N --> R{Did loading succeed?}
+    
+    R -->|Yes| S[Display content]
+    R -->|No| T{Retry attempts left?}
+    
+    T -->|Yes| U[Retry loading]
+    T -->|No| V[Show error message]
+    
+    U --> N
+    
+    K --> W[End]
+    S --> W
+    V --> W
 
 ```
