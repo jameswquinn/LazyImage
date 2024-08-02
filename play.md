@@ -4,7 +4,7 @@ graph TD
     B -->|Yes| C[Render iframe container]
     B -->|No| D[Render image container]
     
-    C --> E{Is native lazy loading supported?}
+    C --> E{Is native lazy loading enabled?}
     D --> E
     
     E -->|Yes| F[Use native lazy loading]
@@ -20,32 +20,53 @@ graph TD
     H --> L
     K --> L
     
-    L -->|No| M[Show placeholder]
-    L -->|Yes| N{Is format 'webp'?}
+    L -->|No| M[Show placeholder/blurred image]
+    L -->|Yes| N{Is low bandwidth mode active?}
     
-    N -->|Yes| O{Is WebP supported?}
-    N -->|No| P[Load content]
+    N -->|Yes| O[Use low-res version of image]
+    N -->|No| P{Are sources provided for <picture>?}
     
-    O -->|Yes| P
-    O -->|No| Q[Change extension to jpg]
-    Q --> R{Did loading succeed?}
+    O --> P
+    P -->|Yes| Q[Render <picture> element with sources]
+    P -->|No| R{Is format 'webp'?}
     
-    R -->|Yes| P
-    R -->|No| S[Load WebP polyfill]
-    S --> P
+    Q --> S[Load content]
+    R -->|Yes| T{Is WebP supported?}
+    R -->|No| S
     
-    P --> T{Did loading succeed?}
+    T -->|Yes| S
+    T -->|No| U[Change extension to jpg]
+    U --> V{Did loading succeed?}
     
-    T -->|Yes| U[Display content]
-    T -->|No| V{Retry attempts left?}
+    V -->|Yes| S
+    V -->|No| W[Change extension to png]
+    W --> X{Did loading succeed?}
     
-    V -->|Yes| W[Retry loading]
-    V -->|No| X[Show error message]
+    X -->|Yes| S
+    X -->|No| Y[Load WebP polyfill]
+    Y --> S
     
-    W --> P
+    S --> Z{Did loading succeed?}
     
-    M --> Y[End]
-    U --> Y
-    X --> Y
+    Z -->|Yes| AA[Display content with fade-in effect]
+    Z -->|No| AB{Retry attempts left?}
+    
+    AB -->|Yes| AC[Wait for retry delay]
+    AB -->|No| AD[Show error message/component]
+    
+    AC --> AE{Has network status changed?}
+    AE -->|Yes| AF[Reset retry count]
+    AE -->|No| S
+    
+    AF --> S
+    
+    AA --> AG{Maintain aspect ratio?}
+    AG -->|Yes| AH[Adjust image style]
+    AG -->|No| AI[Use default style]
+    
+    AH --> AJ[End]
+    AI --> AJ
+    M --> AJ
+    AD --> AJ
 
 ```
